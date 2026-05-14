@@ -1,5 +1,6 @@
-Cấu trúc file:
+## Cấu trúc dự án
 
+```
 TinyShell/
 ├── main.c                  ← vòng lặp REPL chính (ai cũng đụng)
 ├── Makefile
@@ -16,6 +17,7 @@ TinyShell/
 │
 ├── cuong_commands.h        ← Cường
 └── cuong_commands.c
+```
 
 # TinyShell – Phần của Sơn
 
