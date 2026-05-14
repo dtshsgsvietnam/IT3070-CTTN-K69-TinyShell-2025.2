@@ -1,3 +1,22 @@
+Cấu trúc file:
+
+TinyShell/
+├── main.c                  ← vòng lặp REPL chính (ai cũng đụng)
+├── Makefile
+├── README.md
+│
+├── son_commands.h          ← Sơn
+├── son_commands.c
+│
+├── huy_commands.h          ← Huy
+├── huy_commands.c
+│
+├── manh_commands.h         ← Mạnh
+├── manh_commands.c
+│
+├── cuong_commands.h        ← Cường
+└── cuong_commands.c
+
 # TinyShell – Phần của Sơn
 
 ## Files
