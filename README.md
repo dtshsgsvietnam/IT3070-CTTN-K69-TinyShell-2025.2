@@ -1,55 +1,84 @@
-# Project 1: Tiny Shell (myShell)
+# TinyShell – Phần của Sơn
 
-## 📝 Giới thiệu
-**Tiny Shell (myShell)** là một chương trình mô phỏng giao diện dòng lệnh (command-line interface) đơn giản chạy trên nền tảng Windows. Dự án này được thiết kế nhằm mục đích nghiên cứu cách thức hoạt động của một shell, cách quản lý tiến trình (process management) và thực thi các API hệ thống của Windows.
+## Files
+| File | Vai trò |
+|---|---|
+| `son_commands.h` | Header: khai báo hàm public |
+| `son_commands.c` | Implementation: tất cả lệnh của Sơn |
+| `main.c`         | Vòng lặp REPL chính (tích hợp cả nhóm) |
+| `Makefile`       | Build với MinGW |
 
-## 🎯 Mục tiêu dự án
-* Tìm hiểu và áp dụng các Windows API để quản lý tiến trình.
-* Hiểu rõ cơ chế nhận lệnh, phân tích (parsing) và tạo tiến trình con.
-* Quản lý vòng đời tiến trình (Foreground vs Background).
+## Biên dịch
 
-## ✨ Các tính năng chính
-### 1. Chế độ thực thi
-* **Foreground mode:** Shell sẽ đợi tiến trình con kết thúc mới tiếp tục nhận lệnh.
-* **Background mode:** Shell và tiến trình con chạy song song.
+```bash
+# Dùng MinGW
+mingw32-make
 
-### 2. Quản lý tiến trình
-* `list`: Hiển thị danh sách các tiến trình đang chạy (ID, tên lệnh, trạng thái).
-* `kill`, `stop`, `resume`: Điều khiển các tiến trình chạy ngầm.
+# Hoặc thủ công
+gcc -Wall -o myShell.exe main.c son_commands.c -lkernel32
+```
 
-### 3. Lệnh hệ thống tích hợp
-* Các lệnh cơ bản: `exit`, `help`, `date`, `time`, `dir`.
-* Quản lý môi trường: `path`, `addpath` (xem và thiết lập biến môi trường).
+## Các lệnh Sơn implement
 
-### 4. Xử lý tín hiệu & Tiện ích
-* Hỗ trợ ngắt tín hiệu từ bàn phím (`Ctrl + C`) để hủy bỏ tiến trình đang chạy ở chế độ foreground.
-* Hỗ trợ thực thi các tệp kịch bản `.bat`.
+### Lệnh đặc biệt
 
-## 💻 Cài đặt và Sử dụng
+| Lệnh | Mô tả |
+|---|---|
+| `help` | In danh sách lệnh của toàn shell |
+| `exit` | Thoát myShell (gửi kill signal cho các background process – do Mạnh xử lý) |
+| `date` | Hiển thị ngày hôm nay (`Thứ X, DD/MM/YYYY`) |
+| `time` | Hiển thị giờ hiện tại (`HH:MM:SS.mmm`) |
+| `dir [path]` | Liệt kê nội dung thư mục, kèm kích thước và ngày sửa đổi |
 
-### Yêu cầu hệ thống
-* Hệ điều hành: Windows.
-* Trình biên dịch: GCC (MinGW) hoặc MSVC (Visual Studio).
+### Lệnh môi trường
 
-### Cách chạy chương trình
-1.  **Biên dịch:** (Ví dụ sử dụng gcc)
-    ```bash
-    gcc main.c -o myShell.exe
-    ```
-2.  **Khởi chạy:**
-    ```bash
-    ./myShell.exe
-    ```
+| Lệnh | Mô tả |
+|---|---|
+| `path` | In từng entry của biến `PATH` (dạng có đánh số) |
+| `addpath <dir>` | Thêm `<dir>` vào `PATH` cho phiên shell hiện tại |
 
-## 👥 Thành viên thực hiện
-| STT | Họ và Tên | MSSV | Nhiệm vụ |
-|:---:|:---|:---:|:---|
-| 1 |    | | Trưởng nhóm |
-| 2 |    | | Thành viên |
-| 3 |    | | Thành viên |
-| 4 |    | | Thành viên |
+> **Lưu ý:** `addpath` dùng `SetEnvironmentVariableA` – thay đổi chỉ có hiệu lực trong process myShell và các child process của nó; không ảnh hưởng đến registry Windows.
 
+## Cách tích hợp với phần khác
 
-## 📜 Tài liệu tham khảo
-* Windows API Documentation (Process and Thread Functions).
-* Giáo trình Hệ điều hành - Đại học Bách Khoa.
+`main.c` gọi `handle_son_command()` **trước tiên** trong vòng lặp.  
+Hàm này trả về `1` nếu đã xử lý → `continue`.  
+Nếu trả về `0` → chuyển xuống dispatcher của Huy / Mạnh / Cường.
+
+```c
+// Trong vòng lặp main của nhóm:
+if (handle_son_command(trimmed, &should_exit))
+    continue;
+// ... các dispatcher khác ...
+```
+
+## Ví dụ chạy
+
+```
+myShell\C:\Users\Son>help
+    ╔══════════════════════════════════════════╗
+    ║         WELCOME TO MY SHELL              ║
+    ╚══════════════════════════════════════════╝
+  ...
+
+myShell\C:\Users\Son>date
+  Ngày hiện tại: Thứ năm, 14/05/2026
+
+myShell\C:\Users\Son>time
+  Giờ hiện tại: 09:32:17.045
+
+myShell\C:\Users\Son>dir
+  Nội dung thư mục: C:\Users\Son
+  ...
+
+myShell\C:\Users\Son>path
+  [1] C:\Windows\system32
+  [2] C:\Windows
+  ...
+
+myShell\C:\Users\Son>addpath C:\MyTools
+  [addpath] Đã thêm 'C:\MyTools' vào PATH.
+
+myShell\C:\Users\Son>exit
+  Đang thoát myShell. Goodbye!
+```
