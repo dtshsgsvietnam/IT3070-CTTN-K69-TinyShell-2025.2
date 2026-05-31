@@ -1,55 +1,141 @@
-# Project 1: Tiny Shell (myShell)
+# TinyShell
 
-## 📝 Giới thiệu
-**Tiny Shell (myShell)** là một chương trình mô phỏng giao diện dòng lệnh (command-line interface) đơn giản chạy trên nền tảng Windows. Dự án này được thiết kế nhằm mục đích nghiên cứu cách thức hoạt động của một shell, cách quản lý tiến trình (process management) và thực thi các API hệ thống của Windows.
+TinyShell là một shell đơn giản chạy trên Windows, viết bằng C++ và WinAPI.
+Chương trình nhận lệnh từ người dùng theo vòng lặp REPL, xử lý các lệnh nội bộ
+và có khung dispatcher để tích hợp các phần mở rộng của nhóm.
 
-## 🎯 Mục tiêu dự án
-* Tìm hiểu và áp dụng các Windows API để quản lý tiến trình.
-* Hiểu rõ cơ chế nhận lệnh, phân tích (parsing) và tạo tiến trình con.
-* Quản lý vòng đời tiến trình (Foreground vs Background).
+## Cấu trúc dự án
 
-## ✨ Các tính năng chính
-### 1. Chế độ thực thi
-* **Foreground mode:** Shell sẽ đợi tiến trình con kết thúc mới tiếp tục nhận lệnh.
-* **Background mode:** Shell và tiến trình con chạy song song.
+```text
+TinyShell/
+├── src/
+│   ├── main.cpp              # Vòng lặp REPL chính và dispatcher của shell
+│   ├── son_commands.cpp      # Cài đặt các lệnh built-in của Sơn
+│   ├── huy_commands.cpp      # Placeholder phần foreground/background
+│   ├── manh_commands.cpp     # Placeholder phần quản lý tiến trình
+│   └── cuong_commands.cpp    # Placeholder phần chạy file .bat
+├── include/
+│   ├── son_commands.hpp      # Khai báo public cho module Sơn
+│   ├── huy_commands.hpp      # Khai báo public cho module Huy
+│   ├── manh_commands.hpp     # Khai báo public cho module Mạnh
+│   └── cuong_commands.hpp    # Khai báo public cho module Cường
+├── bin/
+│   └── myShell.exe           # File thực thi sau khi build
+├── Makefile                  # Cấu hình build bằng MinGW
+├── README.md                 # Tài liệu dự án
+└── .gitignore                # Các file/thư mục không đưa vào git
+```
 
-### 2. Quản lý tiến trình
-* `list`: Hiển thị danh sách các tiến trình đang chạy (ID, tên lệnh, trạng thái).
-* `kill`, `stop`, `resume`: Điều khiển các tiến trình chạy ngầm.
+## Các file chính
 
-### 3. Lệnh hệ thống tích hợp
-* Các lệnh cơ bản: `exit`, `help`, `date`, `time`, `dir`.
-* Quản lý môi trường: `path`, `addpath` (xem và thiết lập biến môi trường).
+| File | Vai trò |
+|---|---|
+| `src/main.cpp` | Chứa `main()`, in prompt, đọc lệnh và điều phối sang các module |
+| `src/son_commands.cpp` | Cài đặt `help`, `exit`, `date`, `time`, `dir`, `path`, `addpath` |
+| `src/huy_commands.cpp` | Stub cho phần chạy lệnh foreground/background |
+| `src/manh_commands.cpp` | Stub cho phần quản lý tiến trình |
+| `src/cuong_commands.cpp` | Stub cho phần thực thi file `.bat` |
+| `include/son_commands.hpp` | Khai báo các hàm public của module Sơn |
+| `include/huy_commands.hpp` | Khai báo hàm public của module Huy |
+| `include/manh_commands.hpp` | Khai báo hàm public của module Mạnh |
+| `include/cuong_commands.hpp` | Khai báo hàm public của module Cường |
+| `Makefile` | Build toàn bộ source trong `src/` thành `bin/myShell.exe` |
+| `.gitignore` | Bỏ qua output build, file tạm, file editor |
 
-### 4. Xử lý tín hiệu & Tiện ích
-* Hỗ trợ ngắt tín hiệu từ bàn phím (`Ctrl + C`) để hủy bỏ tiến trình đang chạy ở chế độ foreground.
-* Hỗ trợ thực thi các tệp kịch bản `.bat`.
+## Biên dịch
 
-## 💻 Cài đặt và Sử dụng
+Yêu cầu: Windows + MinGW có `g++` và `mingw32-make`.
 
-### Yêu cầu hệ thống
-* Hệ điều hành: Windows.
-* Trình biên dịch: GCC (MinGW) hoặc MSVC (Visual Studio).
+```bash
+mingw32-make
+```
 
-### Cách chạy chương trình
-1.  **Biên dịch:** (Ví dụ sử dụng gcc)
-    ```bash
-    gcc main.c -o myShell.exe
-    ```
-2.  **Khởi chạy:**
-    ```bash
-    ./myShell.exe
-    ```
+File chạy sẽ được tạo tại:
 
-## 👥 Thành viên thực hiện
-| STT | Họ và Tên | MSSV | Nhiệm vụ |
-|:---:|:---|:---:|:---|
-| 1 |    | | Trưởng nhóm |
-| 2 |    | | Thành viên |
-| 3 |    | | Thành viên |
-| 4 |    | | Thành viên |
+```text
+bin/myShell.exe
+```
 
+Có thể build thủ công bằng:
 
-## 📜 Tài liệu tham khảo
-* Windows API Documentation (Process and Thread Functions).
-* Giáo trình Hệ điều hành - Đại học Bách Khoa.
+```bash
+g++ -Wall -Wextra -std=c++17 -g -Iinclude -o bin/myShell.exe src/main.cpp src/son_commands.cpp src/huy_commands.cpp src/manh_commands.cpp src/cuong_commands.cpp -lkernel32
+```
+
+Xóa file build:
+
+```bash
+mingw32-make clean
+```
+
+## Chạy chương trình
+
+```bash
+bin\myShell.exe
+```
+
+Sau khi chạy, shell hiển thị prompt dạng:
+
+```text
+myShell\C:\path\to\current\directory>
+```
+
+Người dùng nhập lệnh tại prompt này.
+
+## Luồng hoạt động
+
+`src/main.cpp` chạy vòng lặp chính:
+
+1. Lấy thư mục hiện tại bằng `GetCurrentDirectoryA`.
+2. In prompt `myShell\<current_directory>`.
+3. Đọc một dòng lệnh từ người dùng.
+4. Bỏ qua dòng trống.
+5. Gọi `handle_son_command()` để xử lý các lệnh built-in.
+6. Nếu không phải lệnh của Sơn, dispatcher chuyển tiếp sang các phần khác:
+   `handle_manh_command()`, `handle_cuong_command()`, hoặc `handle_huy_command()`.
+
+Hiện tại các module Huy/Mạnh/Cường đã có file riêng trong `src/` và `include/`,
+nhưng phần xử lý bên trong vẫn là stub để chờ tích hợp code thật.
+
+## Các lệnh đã hỗ trợ
+
+### Lệnh đặc biệt
+
+| Lệnh | Mô tả |
+|---|---|
+| `help` | In danh sách lệnh |
+| `exit` | Thoát khỏi myShell |
+| `date` | Hiển thị ngày hiện tại |
+| `time` | Hiển thị giờ hiện tại |
+| `dir [path]` | Liệt kê nội dung thư mục |
+
+### Lệnh môi trường
+
+| Lệnh | Mô tả |
+|---|---|
+| `path` | In từng entry của biến môi trường `PATH` |
+| `addpath <dir>` | Thêm thư mục vào `PATH` của phiên shell hiện tại |
+
+Lưu ý: `addpath` dùng `SetEnvironmentVariableA`, nên thay đổi chỉ có hiệu lực
+trong process `myShell` hiện tại và các child process của nó. Lệnh này không sửa
+`PATH` trong registry Windows.
+
+## Các phần đang chờ tích hợp
+
+| Nhóm chức năng | Dispatcher | Trạng thái |
+|---|---|---|
+| Foreground/background execution | `handle_huy_command()` | Stub |
+| Quản lý tiến trình: `list`, `kill`, `stop`, `resume` | `handle_manh_command()` | Stub |
+| Thực thi file `.bat` | `handle_cuong_command()` | Stub |
+
+## Ví dụ
+
+```text
+myShell\C:\Users\Son>help
+myShell\C:\Users\Son>date
+myShell\C:\Users\Son>time
+myShell\C:\Users\Son>dir
+myShell\C:\Users\Son>path
+myShell\C:\Users\Son>addpath C:\MyTools
+myShell\C:\Users\Son>exit
+```

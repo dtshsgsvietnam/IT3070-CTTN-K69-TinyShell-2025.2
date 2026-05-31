@@ -1,0 +1,19 @@
+# Build outputs
+bin/
+build/
+*.exe
+*.o
+*.obj
+
+# Debug symbols and logs
+*.pdb
+*.ilk
+*.log
+
+# Editor/OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+Desktop.ini
