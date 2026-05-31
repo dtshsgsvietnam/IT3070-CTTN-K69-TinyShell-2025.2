@@ -2,8 +2,8 @@
  * TinyShell - Project 1
  * Phần của: Sơn  (C++ version)
  *
- * Biên dịch cùng nhóm:
- *   g++ -Wall -o myShell.exe myshell.cpp son_commands.cpp -lkernel32
+ * Build with the project Makefile:
+ *   mingw32-make
  */
 
 #include "son_commands.hpp"

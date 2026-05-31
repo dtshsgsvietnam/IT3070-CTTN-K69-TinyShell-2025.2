@@ -11,8 +11,11 @@ SRCS = src/main.cpp src/son_commands.cpp src/huy_commands.cpp src/manh_commands.
 
 all: $(TARGET)
 
-$(TARGET): $(SRCS)
+$(TARGET): $(SRCS) | bin
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
+bin:
+	if not exist bin mkdir bin
 
 clean:
 	del /Q $(TARGET) 2>nul || rm -f $(TARGET)

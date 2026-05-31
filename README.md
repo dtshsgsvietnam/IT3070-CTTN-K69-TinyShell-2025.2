@@ -10,9 +10,15 @@ và có khung dispatcher để tích hợp các phần mở rộng của nhóm.
 TinyShell/
 ├── src/
 │   ├── main.cpp              # Vòng lặp REPL chính và dispatcher của shell
-│   └── son_commands.cpp      # Cài đặt các lệnh built-in của Sơn
+│   ├── son_commands.cpp      # Cài đặt các lệnh built-in của Sơn
+│   ├── huy_commands.cpp      # Placeholder phần foreground/background
+│   ├── manh_commands.cpp     # Placeholder phần quản lý tiến trình
+│   └── cuong_commands.cpp    # Placeholder phần chạy file .bat
 ├── include/
-│   └── son_commands.hpp      # Khai báo public cho module son_commands
+│   ├── son_commands.hpp      # Khai báo public cho module Sơn
+│   ├── huy_commands.hpp      # Khai báo public cho module Huy
+│   ├── manh_commands.hpp     # Khai báo public cho module Mạnh
+│   └── cuong_commands.hpp    # Khai báo public cho module Cường
 ├── bin/
 │   └── myShell.exe           # File thực thi sau khi build
 ├── Makefile                  # Cấu hình build bằng MinGW
@@ -26,8 +32,14 @@ TinyShell/
 |---|---|
 | `src/main.cpp` | Chứa `main()`, in prompt, đọc lệnh và điều phối sang các module |
 | `src/son_commands.cpp` | Cài đặt `help`, `exit`, `date`, `time`, `dir`, `path`, `addpath` |
+| `src/huy_commands.cpp` | Stub cho phần chạy lệnh foreground/background |
+| `src/manh_commands.cpp` | Stub cho phần quản lý tiến trình |
+| `src/cuong_commands.cpp` | Stub cho phần thực thi file `.bat` |
 | `include/son_commands.hpp` | Khai báo các hàm public của module Sơn |
-| `Makefile` | Build `src/main.cpp` và `src/son_commands.cpp` thành `bin/myShell.exe` |
+| `include/huy_commands.hpp` | Khai báo hàm public của module Huy |
+| `include/manh_commands.hpp` | Khai báo hàm public của module Mạnh |
+| `include/cuong_commands.hpp` | Khai báo hàm public của module Cường |
+| `Makefile` | Build toàn bộ source trong `src/` thành `bin/myShell.exe` |
 | `.gitignore` | Bỏ qua output build, file tạm, file editor |
 
 ## Biên dịch
@@ -47,7 +59,7 @@ bin/myShell.exe
 Có thể build thủ công bằng:
 
 ```bash
-g++ -Wall -Wextra -std=c++17 -g -Iinclude -o bin/myShell.exe src/main.cpp src/son_commands.cpp -lkernel32
+g++ -Wall -Wextra -std=c++17 -g -Iinclude -o bin/myShell.exe src/main.cpp src/son_commands.cpp src/huy_commands.cpp src/manh_commands.cpp src/cuong_commands.cpp -lkernel32
 ```
 
 Xóa file build:

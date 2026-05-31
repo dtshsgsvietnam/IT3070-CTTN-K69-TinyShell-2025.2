@@ -107,7 +107,7 @@ Checklist khi merge code:
 - [x] Xoa cac stub `handle_huy_command()`, `handle_manh_command()`, `handle_cuong_command()` khoi `src/main.cpp`
 - [ ] Dam bao moi module tra ve trang thai ro rang sau khi xu ly lenh
 - [x] Cap nhat `Makefile` voi tat ca file `.cpp` moi
-- [ ] Chay `mingw32-make -B`
+- [x] Chay `mingw32-make -B`
 - [ ] Chay thu cac lenh trong README
 - [ ] Cap nhat README neu co thay doi ve lenh hoac cach build
 
