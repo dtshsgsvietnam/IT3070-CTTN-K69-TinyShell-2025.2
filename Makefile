@@ -2,12 +2,12 @@
 # Chạy: mingw32-make   hoặc   make
 
 CXX      = g++
-CXXFLAGS = -Wall -Wextra -std=c++17 -g
+CXXFLAGS = -Wall -Wextra -std=c++17 -g -Iinclude
 LDFLAGS  = -lkernel32
-TARGET   = myShell.exe
+TARGET   = bin/myShell.exe
 
-# Thêm file .cpp của Mạnh và Cường vào đây khi họ gửi code
-SRCS = myshell.cpp son_commands.cpp
+# Danh sach source duoc build
+SRCS = src/main.cpp src/son_commands.cpp src/huy_commands.cpp src/manh_commands.cpp src/cuong_commands.cpp
 
 all: $(TARGET)
 

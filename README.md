@@ -1,105 +1,129 @@
+# TinyShell
+
+TinyShell là một shell đơn giản chạy trên Windows, viết bằng C++ và WinAPI.
+Chương trình nhận lệnh từ người dùng theo vòng lặp REPL, xử lý các lệnh nội bộ
+và có khung dispatcher để tích hợp các phần mở rộng của nhóm.
+
 ## Cấu trúc dự án
 
-```
+```text
 TinyShell/
-├── main.c                  ← vòng lặp REPL chính (ai cũng đụng)
-├── Makefile
-├── README.md
-│
-├── son_commands.h          ← Sơn
-├── son_commands.c
-│
-├── huy_commands.h          ← Huy
-├── huy_commands.c
-│
-├── manh_commands.h         ← Mạnh
-├── manh_commands.c
-│
-├── cuong_commands.h        ← Cường
-└── cuong_commands.c
+├── src/
+│   ├── main.cpp              # Vòng lặp REPL chính và dispatcher của shell
+│   └── son_commands.cpp      # Cài đặt các lệnh built-in của Sơn
+├── include/
+│   └── son_commands.hpp      # Khai báo public cho module son_commands
+├── bin/
+│   └── myShell.exe           # File thực thi sau khi build
+├── Makefile                  # Cấu hình build bằng MinGW
+├── README.md                 # Tài liệu dự án
+└── .gitignore                # Các file/thư mục không đưa vào git
 ```
 
-# TinyShell – Phần của Sơn
+## Các file chính
 
-## Files
 | File | Vai trò |
 |---|---|
-| `son_commands.h` | Header: khai báo hàm public |
-| `son_commands.c` | Implementation: tất cả lệnh của Sơn |
-| `main.c`         | Vòng lặp REPL chính (tích hợp cả nhóm) |
-| `Makefile`       | Build với MinGW |
+| `src/main.cpp` | Chứa `main()`, in prompt, đọc lệnh và điều phối sang các module |
+| `src/son_commands.cpp` | Cài đặt `help`, `exit`, `date`, `time`, `dir`, `path`, `addpath` |
+| `include/son_commands.hpp` | Khai báo các hàm public của module Sơn |
+| `Makefile` | Build `src/main.cpp` và `src/son_commands.cpp` thành `bin/myShell.exe` |
+| `.gitignore` | Bỏ qua output build, file tạm, file editor |
 
 ## Biên dịch
 
-```bash
-# Dùng MinGW
-mingw32-make
+Yêu cầu: Windows + MinGW có `g++` và `mingw32-make`.
 
-# Hoặc thủ công
-gcc -Wall -o myShell.exe main.c son_commands.c -lkernel32
+```bash
+mingw32-make
 ```
 
-## Các lệnh Sơn implement
+File chạy sẽ được tạo tại:
+
+```text
+bin/myShell.exe
+```
+
+Có thể build thủ công bằng:
+
+```bash
+g++ -Wall -Wextra -std=c++17 -g -Iinclude -o bin/myShell.exe src/main.cpp src/son_commands.cpp -lkernel32
+```
+
+Xóa file build:
+
+```bash
+mingw32-make clean
+```
+
+## Chạy chương trình
+
+```bash
+bin\myShell.exe
+```
+
+Sau khi chạy, shell hiển thị prompt dạng:
+
+```text
+myShell\C:\path\to\current\directory>
+```
+
+Người dùng nhập lệnh tại prompt này.
+
+## Luồng hoạt động
+
+`src/main.cpp` chạy vòng lặp chính:
+
+1. Lấy thư mục hiện tại bằng `GetCurrentDirectoryA`.
+2. In prompt `myShell\<current_directory>`.
+3. Đọc một dòng lệnh từ người dùng.
+4. Bỏ qua dòng trống.
+5. Gọi `handle_son_command()` để xử lý các lệnh built-in.
+6. Nếu không phải lệnh của Sơn, dispatcher chuyển tiếp sang các phần khác:
+   `handle_manh_command()`, `handle_cuong_command()`, hoặc `handle_huy_command()`.
+
+Hiện tại các module Huy/Mạnh/Cường đã có file riêng trong `src/` và `include/`,
+nhưng phần xử lý bên trong vẫn là stub để chờ tích hợp code thật.
+
+## Các lệnh đã hỗ trợ
 
 ### Lệnh đặc biệt
 
 | Lệnh | Mô tả |
 |---|---|
-| `help` | In danh sách lệnh của toàn shell |
-| `exit` | Thoát myShell (gửi kill signal cho các background process – do Mạnh xử lý) |
-| `date` | Hiển thị ngày hôm nay (`Thứ X, DD/MM/YYYY`) |
-| `time` | Hiển thị giờ hiện tại (`HH:MM:SS.mmm`) |
-| `dir [path]` | Liệt kê nội dung thư mục, kèm kích thước và ngày sửa đổi |
+| `help` | In danh sách lệnh |
+| `exit` | Thoát khỏi myShell |
+| `date` | Hiển thị ngày hiện tại |
+| `time` | Hiển thị giờ hiện tại |
+| `dir [path]` | Liệt kê nội dung thư mục |
 
 ### Lệnh môi trường
 
 | Lệnh | Mô tả |
 |---|---|
-| `path` | In từng entry của biến `PATH` (dạng có đánh số) |
-| `addpath <dir>` | Thêm `<dir>` vào `PATH` cho phiên shell hiện tại |
+| `path` | In từng entry của biến môi trường `PATH` |
+| `addpath <dir>` | Thêm thư mục vào `PATH` của phiên shell hiện tại |
 
-> **Lưu ý:** `addpath` dùng `SetEnvironmentVariableA` – thay đổi chỉ có hiệu lực trong process myShell và các child process của nó; không ảnh hưởng đến registry Windows.
+Lưu ý: `addpath` dùng `SetEnvironmentVariableA`, nên thay đổi chỉ có hiệu lực
+trong process `myShell` hiện tại và các child process của nó. Lệnh này không sửa
+`PATH` trong registry Windows.
 
-## Cách tích hợp với phần khác
+## Các phần đang chờ tích hợp
 
-`main.c` gọi `handle_son_command()` **trước tiên** trong vòng lặp.  
-Hàm này trả về `1` nếu đã xử lý → `continue`.  
-Nếu trả về `0` → chuyển xuống dispatcher của Huy / Mạnh / Cường.
+| Nhóm chức năng | Dispatcher | Trạng thái |
+|---|---|---|
+| Foreground/background execution | `handle_huy_command()` | Stub |
+| Quản lý tiến trình: `list`, `kill`, `stop`, `resume` | `handle_manh_command()` | Stub |
+| Thực thi file `.bat` | `handle_cuong_command()` | Stub |
 
-```c
-// Trong vòng lặp main của nhóm:
-if (handle_son_command(trimmed, &should_exit))
-    continue;
-// ... các dispatcher khác ...
-```
+## Ví dụ
 
-## Ví dụ chạy
-
-```
+```text
 myShell\C:\Users\Son>help
-    ╔══════════════════════════════════════════╗
-    ║         WELCOME TO MY SHELL              ║
-    ╚══════════════════════════════════════════╝
-  ...
-
 myShell\C:\Users\Son>date
-  Ngày hiện tại: Thứ năm, 14/05/2026
-
 myShell\C:\Users\Son>time
-  Giờ hiện tại: 09:32:17.045
-
 myShell\C:\Users\Son>dir
-  Nội dung thư mục: C:\Users\Son
-  ...
-
 myShell\C:\Users\Son>path
-  [1] C:\Windows\system32
-  [2] C:\Windows
-  ...
-
 myShell\C:\Users\Son>addpath C:\MyTools
-  [addpath] Đã thêm 'C:\MyTools' vào PATH.
-
 myShell\C:\Users\Son>exit
-  Đang thoát myShell. Goodbye!
 ```
