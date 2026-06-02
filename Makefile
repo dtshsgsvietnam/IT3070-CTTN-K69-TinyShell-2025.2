@@ -18,6 +18,6 @@ bin:
 	if not exist bin mkdir bin
 
 clean:
-	del /Q $(TARGET) 2>nul || rm -f $(TARGET)
+	if exist "bin\myShell.exe" del /Q "bin\myShell.exe"
 
 .PHONY: all clean
