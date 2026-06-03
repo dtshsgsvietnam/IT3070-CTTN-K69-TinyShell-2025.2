@@ -10,6 +10,7 @@ struct BackgroundProcess
     char command[512];    // Command line
     void *process_handle; // HANDLE to process (void* de tranh include windows.h)
     void *thread_handle;  // HANDLE to thread (void* de tranh include windows.h)
+    void *job_handle;     // HANDLE to job object, dung de kill ca process con
     bool is_stopped;      // true neu process dang bi tam dung
 };
 
