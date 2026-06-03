@@ -30,23 +30,35 @@ std::string trim_command(const std::string &text)
     return text.substr(start, end - start);
 }
 
-static std::string first_token(const std::string &line)
+std::string first_token(const std::string &line)
 {
-    size_t pos = line.find_first_of(" \t");
+    std::string text = trim_command(line);
+    size_t pos = text.find_first_of(" \t");
     if (pos == std::string::npos)
     {
-        return line;
+        return text;
     }
-    return line.substr(0, pos);
+    return text.substr(0, pos);
 }
 
-static std::string to_lower(std::string text)
+std::string to_lower(std::string text)
 {
     for (char &ch : text)
     {
         ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
     }
     return text;
+}
+
+std::string command_args(const std::string &line)
+{
+    std::string text = trim_command(line);
+    size_t pos = text.find_first_of(" \t");
+    if (pos == std::string::npos)
+    {
+        return "";
+    }
+    return trim_command(text.substr(pos + 1));
 }
 
 static bool ends_with_bat(const std::string &token)

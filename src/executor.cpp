@@ -110,6 +110,7 @@ static void execute_background(const char *cmd_line)
     std::strncpy(bg_proc.command, cmd_line, sizeof(bg_proc.command) - 1);
     bg_proc.process_handle = process_info.hProcess;
     bg_proc.thread_handle = process_info.hThread;
+    bg_proc.is_stopped = false;
 
     background_processes.push_back(bg_proc);
 
