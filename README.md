@@ -71,13 +71,13 @@ mingw32-make clean
 | PATH | `path`, `addpath <dir>` |
 | Thực thi lệnh ngoài | Foreground mặc định, background khi lệnh kết thúc bằng `&` |
 | Quản lý process nền | `list`, `kill <pid>`, `stop <pid>`, `resume <pid>` |
+| Ctrl+C | Hủy tiến trình foreground đang chạy, shell chính vẫn tiếp tục |
 
 Đang chờ hoàn thiện:
 
 | Nhóm | Trạng thái |
 |---|---|
 | Script `.bat` | Đã có dispatcher, phần chạy từng dòng đang là stub |
-| Ctrl+C | Chưa có handler riêng để hủy foreground process |
 
 ## Ví dụ
 

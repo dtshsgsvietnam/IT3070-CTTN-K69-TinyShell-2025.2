@@ -10,6 +10,7 @@
 #include <cstring>
 #include <string>
 
+#include "executor.hpp"
 #include "shell.hpp"
 
 int main(void)
@@ -17,6 +18,7 @@ int main(void)
     // Set UTF-8 mode for console
     SetConsoleCP(CP_UTF8);
     SetConsoleOutputCP(CP_UTF8);
+    setup_ctrl_c_handler();
 
     char buffer[4096];
 
