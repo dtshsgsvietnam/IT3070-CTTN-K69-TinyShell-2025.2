@@ -163,9 +163,50 @@ void cmd_dir(const string &path) {
 /* =========================================================
  * 5. PATH
  * ========================================================= */
+static string get_path_value() {
+    DWORD needed = GetEnvironmentVariableA("PATH", nullptr, 0);
+    if (needed == 0) {
+        return "";
+    }
+
+    string value(needed, '\0');
+    DWORD copied = GetEnvironmentVariableA("PATH", &value[0], needed);
+    if (copied == 0 || copied >= needed) {
+        return "";
+    }
+
+    value.resize(copied);
+    return value;
+}
+
+static string normalize_path_entry(string path) {
+    path = to_lower(trim_command(path));
+    while (path.size() > 3 && (path.back() == '\\' || path.back() == '/')) {
+        path.pop_back();
+    }
+    return path;
+}
+
+static bool path_has_entry(const string &path_value, const string &dir) {
+    string target = normalize_path_entry(dir);
+    if (target.empty()) {
+        return false;
+    }
+
+    stringstream ss(path_value);
+    string token;
+    while (getline(ss, token, ';')) {
+        if (normalize_path_entry(token) == target) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void cmd_path() {
-    const char *path_val = getenv("PATH");
-    if (!path_val) {
+    string path_str = get_path_value();
+    if (path_str.empty()) {
         cout << "  [path] Không đọc được PATH.\n";
         return;
     }
@@ -173,7 +214,6 @@ void cmd_path() {
     cout << "\n  Giá trị biến môi trường PATH:\n";
     cout << "  " << string(44, '=') << "\n";
 
-    string path_str(path_val);
     stringstream ss(path_str);
     string token;
     int idx = 1;
@@ -209,18 +249,19 @@ void cmd_addpath(const string &new_dir) {
     }
 
     // Lấy PATH hiện tại
-    char old_buf[8192] = {};
-    GetEnvironmentVariableA("PATH", old_buf, sizeof(old_buf));
-    string old_path(old_buf);
+    string old_path = get_path_value();
 
     // Kiểm tra trùng
-    if (old_path.find(new_dir) != string::npos) {
+    if (path_has_entry(old_path, new_dir)) {
         cout << "  [addpath] '" << new_dir << "' đã có trong PATH.\n";
         return;
     }
 
     string new_path = old_path.empty() ? new_dir : old_path + ";" + new_dir;
-    SetEnvironmentVariableA("PATH", new_path.c_str());
+    if (!SetEnvironmentVariableA("PATH", new_path.c_str())) {
+        cout << "  [addpath] Khong the cap nhat PATH.\n";
+        return;
+    }
 
     cout << "  [addpath] Đã thêm '" << new_dir << "' vào PATH.\n";
     cout << "  Lưu ý: chỉ có hiệu lực trong phiên shell này.\n";
