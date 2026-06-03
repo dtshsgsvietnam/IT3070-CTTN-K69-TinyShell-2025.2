@@ -7,7 +7,7 @@ LDFLAGS  = -lkernel32
 TARGET   = bin/myShell.exe
 
 # Danh sach source duoc build
-SRCS = src/main.cpp src/son_commands.cpp src/huy_commands.cpp src/manh_commands.cpp src/cuong_commands.cpp
+SRCS = src/main.cpp src/shell.cpp src/builtins.cpp src/executor.cpp src/process_manager.cpp src/script_runner.cpp
 
 all: $(TARGET)
 
