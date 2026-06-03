@@ -7,40 +7,13 @@
  */
 
 #include "builtins.hpp"
+#include "shell.hpp"
 #include <windows.h>
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <algorithm>
 
 using namespace std;
-
-/* =========================================================
- * Helpers
- * ========================================================= */
-
-// Chuyển string sang lowercase để so sánh không phân biệt hoa thường
-static string to_lower(string s) {
-    transform(s.begin(), s.end(), s.begin(), ::tolower);
-    return s;
-}
-
-// Trim khoảng trắng hai đầu
-static string trim(const string &s) {
-    size_t start = s.find_first_not_of(" \t\r\n");
-    if (start == string::npos) return "";
-    size_t end = s.find_last_not_of(" \t\r\n");
-    return s.substr(start, end - start + 1);
-}
-
-// Tách lệnh thành [verb, args]
-static pair<string, string> split_cmd(const string &line) {
-    string t = trim(line);
-    size_t sp = t.find_first_of(" \t");
-    if (sp == string::npos)
-        return { to_lower(t), "" };
-    return { to_lower(t.substr(0, sp)), trim(t.substr(sp + 1)) };
-}
 
 /* =========================================================
  * 1. HELP
@@ -207,7 +180,7 @@ void cmd_path() {
 
     while (getline(ss, token, ';')) {
         // trim token
-        string t = trim(token);
+        string t = trim_command(token);
         if (!t.empty()) {
             cout << "  [" << (idx < 10 ? " " : "") << idx << "] " << t << "\n";
             idx++;
@@ -262,7 +235,8 @@ void cmd_addpath(const string &new_dir) {
  *  -1  → không phải built-in command
  * ========================================================= */
 int handle_builtin_command(const string &cmd_line) {
-    auto [verb, args] = split_cmd(cmd_line);
+    string verb = to_lower(first_token(cmd_line));
+    string args = command_args(cmd_line);
 
     if (verb == "help")    { cmd_help();             return 1; }
     if (verb == "exit")    { cout << "  Đang thoát myShell. Goodbye!\n"; return 0; }

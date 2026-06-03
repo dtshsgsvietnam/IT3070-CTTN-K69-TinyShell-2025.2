@@ -13,7 +13,7 @@ TinyShell/
 │   ├── shell.cpp             # Parse/dispatch lệnh chung
 │   ├── builtins.cpp          # help, exit, date, time, dir, path, addpath
 │   ├── executor.cpp          # Chạy lệnh foreground/background
-│   ├── process_manager.cpp   # Dữ liệu background process và stub list/kill/stop/resume
+│   ├── process_manager.cpp   # Quản lý background process: list/kill/stop/resume
 │   └── script_runner.cpp     # Stub chạy file .bat
 ├── include/
 │   ├── shell.hpp
@@ -70,12 +70,12 @@ mingw32-make clean
 | Built-in | `help`, `exit`, `date`, `time`, `dir [path]` |
 | PATH | `path`, `addpath <dir>` |
 | Thực thi lệnh ngoài | Foreground mặc định, background khi lệnh kết thúc bằng `&` |
+| Quản lý process nền | `list`, `kill <pid>`, `stop <pid>`, `resume <pid>` |
 
 Đang chờ hoàn thiện:
 
 | Nhóm | Trạng thái |
 |---|---|
-| Quản lý process nền | `list`, `kill`, `stop`, `resume` đang là stub |
 | Script `.bat` | Đã có dispatcher, phần chạy từng dòng đang là stub |
 | Ctrl+C | Chưa có handler riêng để hủy foreground process |
 
@@ -87,6 +87,7 @@ myShell\C:\Project>dir
 myShell\C:\Project>path
 myShell\C:\Project>addpath C:\MyTools
 myShell\C:\Project>ping 127.0.0.1
-myShell\C:\Project>notepad &
+myShell\C:\Project>ping 127.0.0.1 -n 20 &
+myShell\C:\Project>list
 myShell\C:\Project>exit
 ```
