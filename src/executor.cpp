@@ -4,8 +4,52 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <atomic>
 
 #include "process_manager.hpp"
+
+static std::atomic<void *> foreground_process_handle(nullptr);
+static std::atomic<void *> foreground_job_handle(nullptr);
+static std::atomic<DWORD> foreground_process_id(0);
+
+static BOOL WINAPI ctrl_c_handler(DWORD ctrl_type)
+{
+    if (ctrl_type != CTRL_C_EVENT && ctrl_type != CTRL_BREAK_EVENT)
+    {
+        return FALSE;
+    }
+
+    HANDLE process_handle = static_cast<HANDLE>(foreground_process_handle.load());
+    HANDLE job_handle = static_cast<HANDLE>(foreground_job_handle.load());
+    DWORD pid = foreground_process_id.load();
+
+    if (process_handle != nullptr)
+    {
+        std::printf("\n  [Ctrl+C] Dang huy tien trinh foreground PID %lu...\n", pid);
+        if (job_handle != nullptr)
+        {
+            TerminateJobObject(job_handle, 1);
+        }
+        else
+        {
+            TerminateProcess(process_handle, 1);
+        }
+    }
+    else
+    {
+        std::printf("\n  [Ctrl+C] Khong co tien trinh foreground dang chay.\n");
+    }
+
+    return TRUE;
+}
+
+void setup_ctrl_c_handler(void)
+{
+    if (!SetConsoleCtrlHandler(ctrl_c_handler, TRUE))
+    {
+        std::printf("  [Ctrl+C] Khong the dang ky handler (ma loi: %lu).\n", GetLastError());
+    }
+}
 
 // Kiem tra neu lenh ket thuc bang &
 static bool is_background_command(const std::string &cmd, std::string &cmd_without_amp)
@@ -31,6 +75,7 @@ static void execute_foreground(const char *cmd_line)
 {
     STARTUPINFOA startup_info = {};
     PROCESS_INFORMATION process_info = {};
+    HANDLE job_handle = nullptr;
 
     startup_info.cb = sizeof(STARTUPINFOA);
 
@@ -58,8 +103,32 @@ static void execute_foreground(const char *cmd_line)
         return;
     }
 
+    job_handle = CreateJobObjectA(nullptr, nullptr);
+    if (job_handle != nullptr)
+    {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_info = {};
+        job_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        SetInformationJobObject(
+            job_handle,
+            JobObjectExtendedLimitInformation,
+            &job_info,
+            sizeof(job_info));
+
+        if (!AssignProcessToJobObject(job_handle, process_info.hProcess))
+        {
+            CloseHandle(job_handle);
+            job_handle = nullptr;
+        }
+    }
+
     // Doi process ket thuc
+    foreground_process_handle.store(process_info.hProcess);
+    foreground_job_handle.store(job_handle);
+    foreground_process_id.store(process_info.dwProcessId);
     WaitForSingleObject(process_info.hProcess, INFINITE);
+    foreground_process_handle.store(nullptr);
+    foreground_job_handle.store(nullptr);
+    foreground_process_id.store(0);
 
     // Lay exit code
     DWORD exit_code = 0;
@@ -72,6 +141,10 @@ static void execute_foreground(const char *cmd_line)
     }
 
     // Dong handle
+    if (job_handle != nullptr)
+    {
+        CloseHandle(job_handle);
+    }
     CloseHandle(process_info.hProcess);
     CloseHandle(process_info.hThread);
 }
