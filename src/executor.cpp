@@ -11,6 +11,31 @@
 static std::atomic<void *> foreground_process_handle(nullptr);
 static std::atomic<void *> foreground_job_handle(nullptr);
 static std::atomic<DWORD> foreground_process_id(0);
+static std::atomic<bool> foreground_cancel_requested(false);
+static DWORD original_input_mode = 0;
+static DWORD original_output_mode = 0;
+static bool console_modes_saved = false;
+
+static void restore_console_after_foreground(void)
+{
+    if (!console_modes_saved)
+    {
+        return;
+    }
+
+    HANDLE input_handle = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (input_handle != nullptr && input_handle != INVALID_HANDLE_VALUE)
+    {
+        SetConsoleMode(input_handle, original_input_mode);
+        FlushConsoleInputBuffer(input_handle);
+    }
+    if (output_handle != nullptr && output_handle != INVALID_HANDLE_VALUE)
+    {
+        SetConsoleMode(output_handle, original_output_mode);
+    }
+}
 
 static BOOL WINAPI ctrl_c_handler(DWORD ctrl_type)
 {
@@ -21,11 +46,10 @@ static BOOL WINAPI ctrl_c_handler(DWORD ctrl_type)
 
     HANDLE process_handle = static_cast<HANDLE>(foreground_process_handle.load());
     HANDLE job_handle = static_cast<HANDLE>(foreground_job_handle.load());
-    DWORD pid = foreground_process_id.load();
 
     if (process_handle != nullptr)
     {
-        std::printf("\n  [Ctrl+C] Dang huy tien trinh foreground PID %lu...\n", pid);
+        foreground_cancel_requested.store(true);
         if (job_handle != nullptr)
         {
             TerminateJobObject(job_handle, 1);
@@ -37,7 +61,7 @@ static BOOL WINAPI ctrl_c_handler(DWORD ctrl_type)
     }
     else
     {
-        std::printf("\n  [Ctrl+C] Khong co tien trinh foreground dang chay.\n");
+        foreground_cancel_requested.store(false);
     }
 
     return TRUE;
@@ -45,6 +69,19 @@ static BOOL WINAPI ctrl_c_handler(DWORD ctrl_type)
 
 void setup_ctrl_c_handler(void)
 {
+    HANDLE input_handle = GetStdHandle(STD_INPUT_HANDLE);
+    HANDLE output_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (input_handle != nullptr &&
+        input_handle != INVALID_HANDLE_VALUE &&
+        output_handle != nullptr &&
+        output_handle != INVALID_HANDLE_VALUE &&
+        GetConsoleMode(input_handle, &original_input_mode) &&
+        GetConsoleMode(output_handle, &original_output_mode))
+    {
+        console_modes_saved = true;
+    }
+
     if (!SetConsoleCtrlHandler(ctrl_c_handler, TRUE))
     {
         std::printf("  [Ctrl+C] Khong the dang ky handler (ma loi: %lu).\n", GetLastError());
@@ -125,16 +162,25 @@ static void execute_foreground(const char *cmd_line)
     foreground_process_handle.store(process_info.hProcess);
     foreground_job_handle.store(job_handle);
     foreground_process_id.store(process_info.dwProcessId);
+    foreground_cancel_requested.store(false);
     WaitForSingleObject(process_info.hProcess, INFINITE);
+    bool was_cancelled = foreground_cancel_requested.load();
     foreground_process_handle.store(nullptr);
     foreground_job_handle.store(nullptr);
     foreground_process_id.store(0);
+    foreground_cancel_requested.store(false);
 
     // Lay exit code
     DWORD exit_code = 0;
     if (GetExitCodeProcess(process_info.hProcess, &exit_code))
     {
-        if (exit_code != 0)
+        if (was_cancelled)
+        {
+            restore_console_after_foreground();
+            std::printf("\n  [Ctrl+C] Da huy tien trinh foreground PID %lu.\n",
+                        process_info.dwProcessId);
+        }
+        else if (exit_code != 0)
         {
             std::printf("  Process exited with code: %lu\n", exit_code);
         }
