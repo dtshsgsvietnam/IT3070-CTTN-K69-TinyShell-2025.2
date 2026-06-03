@@ -200,6 +200,7 @@ static void execute_background(const char *cmd_line)
 {
     STARTUPINFOA startup_info = {};
     PROCESS_INFORMATION process_info = {};
+    HANDLE job_handle = nullptr;
 
     startup_info.cb = sizeof(STARTUPINFOA);
 
@@ -212,7 +213,7 @@ static void execute_background(const char *cmd_line)
             nullptr,
             nullptr,
             FALSE,
-            CREATE_NEW_CONSOLE, // Tạo console riêng để không đè lên prompt chính
+            CREATE_NEW_CONSOLE | CREATE_SUSPENDED,
             nullptr,
             nullptr,
             &startup_info,
@@ -223,12 +224,49 @@ static void execute_background(const char *cmd_line)
         return;
     }
 
+    job_handle = CreateJobObjectA(nullptr, nullptr);
+    if (job_handle != nullptr)
+    {
+        JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_info = {};
+        job_info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+        SetInformationJobObject(
+            job_handle,
+            JobObjectExtendedLimitInformation,
+            &job_info,
+            sizeof(job_info));
+
+        if (!AssignProcessToJobObject(job_handle, process_info.hProcess))
+        {
+            CloseHandle(job_handle);
+            job_handle = nullptr;
+        }
+    }
+
+    if (ResumeThread(process_info.hThread) == static_cast<DWORD>(-1))
+    {
+        DWORD error = GetLastError();
+        if (job_handle != nullptr)
+        {
+            TerminateJobObject(job_handle, 1);
+            CloseHandle(job_handle);
+        }
+        else
+        {
+            TerminateProcess(process_info.hProcess, 1);
+        }
+        CloseHandle(process_info.hProcess);
+        CloseHandle(process_info.hThread);
+        std::printf("  Error: Cannot start background command (Error code: %lu)\n", error);
+        return;
+    }
+
     // Luu process info
     BackgroundProcess bg_proc = {};
     bg_proc.pid = process_info.dwProcessId;
     std::strncpy(bg_proc.command, cmd_line, sizeof(bg_proc.command) - 1);
     bg_proc.process_handle = process_info.hProcess;
     bg_proc.thread_handle = process_info.hThread;
+    bg_proc.job_handle = job_handle;
     bg_proc.is_stopped = false;
 
     background_processes.push_back(bg_proc);

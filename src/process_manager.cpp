@@ -42,6 +42,7 @@ void cleanup_finished_processes()
     {
         HANDLE process_handle = (HANDLE)background_processes[i].process_handle;
         HANDLE thread_handle = (HANDLE)background_processes[i].thread_handle;
+        HANDLE job_handle = (HANDLE)background_processes[i].job_handle;
 
         DWORD exit_code = 0;
         if (GetExitCodeProcess(process_handle, &exit_code) && exit_code != STILL_ACTIVE)
@@ -49,6 +50,10 @@ void cleanup_finished_processes()
             // Process da ket thuc
             CloseHandle(process_handle);
             CloseHandle(thread_handle);
+            if (job_handle != nullptr)
+            {
+                CloseHandle(job_handle);
+            }
             background_processes.erase(background_processes.begin() + i);
         }
         else
@@ -72,6 +77,67 @@ static bool find_process_index(uint32_t pid, size_t &index)
     }
 
     return false;
+}
+
+static bool contains_pid(const std::vector<uint32_t> &pids, uint32_t pid)
+{
+    for (uint32_t item : pids)
+    {
+        if (item == pid)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+static std::vector<uint32_t> collect_process_tree_pids(uint32_t root_pid)
+{
+    std::vector<uint32_t> pids;
+    pids.push_back(root_pid);
+
+    struct ProcessRelation
+    {
+        uint32_t pid;
+        uint32_t parent_pid;
+    };
+
+    std::vector<ProcessRelation> relations;
+    HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE)
+    {
+        return pids;
+    }
+
+    PROCESSENTRY32 process_entry = {};
+    process_entry.dwSize = sizeof(PROCESSENTRY32);
+
+    if (Process32First(snapshot, &process_entry))
+    {
+        do
+        {
+            ProcessRelation relation = {};
+            relation.pid = process_entry.th32ProcessID;
+            relation.parent_pid = process_entry.th32ParentProcessID;
+            relations.push_back(relation);
+        } while (Process32Next(snapshot, &process_entry));
+    }
+
+    CloseHandle(snapshot);
+
+    for (size_t i = 0; i < pids.size(); i++)
+    {
+        for (const ProcessRelation &relation : relations)
+        {
+            if (relation.parent_pid == pids[i] &&
+                !contains_pid(pids, relation.pid))
+            {
+                pids.push_back(relation.pid);
+            }
+        }
+    }
+
+    return pids;
 }
 
 // In danh sach process dang chay
@@ -99,6 +165,7 @@ void print_running_processes()
 
 static bool suspend_or_resume_process_threads(uint32_t pid, bool suspend)
 {
+    std::vector<uint32_t> process_tree = collect_process_tree_pids(pid);
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (snapshot == INVALID_HANDLE_VALUE)
     {
@@ -115,7 +182,7 @@ static bool suspend_or_resume_process_threads(uint32_t pid, bool suspend)
     {
         do
         {
-            if (thread_entry.th32OwnerProcessID != pid)
+            if (!contains_pid(process_tree, thread_entry.th32OwnerProcessID))
             {
                 continue;
             }
@@ -157,8 +224,19 @@ static void kill_process(uint32_t pid)
 
     HANDLE process_handle = static_cast<HANDLE>(background_processes[index].process_handle);
     HANDLE thread_handle = static_cast<HANDLE>(background_processes[index].thread_handle);
+    HANDLE job_handle = static_cast<HANDLE>(background_processes[index].job_handle);
 
-    if (!TerminateProcess(process_handle, 1))
+    bool terminated = false;
+    if (job_handle != nullptr)
+    {
+        terminated = TerminateJobObject(job_handle, 1);
+    }
+    if (!terminated)
+    {
+        terminated = TerminateProcess(process_handle, 1);
+    }
+
+    if (!terminated)
     {
         std::printf("  [kill] Khong the ket thuc PID %u (ma loi: %lu).\n", pid, GetLastError());
         return;
@@ -167,6 +245,10 @@ static void kill_process(uint32_t pid)
     WaitForSingleObject(process_handle, 1000);
     CloseHandle(process_handle);
     CloseHandle(thread_handle);
+    if (job_handle != nullptr)
+    {
+        CloseHandle(job_handle);
+    }
     background_processes.erase(background_processes.begin() + index);
 
     std::printf("  [kill] Da ket thuc PID %u.\n", pid);
