@@ -1,12 +1,12 @@
 /*
  * TinyShell - Project 1
- * Phần của: Sơn  (C++ version)
+ * Built-in commands.
  *
  * Build with the project Makefile:
  *   mingw32-make
  */
 
-#include "son_commands.hpp"
+#include "builtins.hpp"
 #include <windows.h>
 #include <iostream>
 #include <string>
@@ -208,8 +208,10 @@ void cmd_path() {
     while (getline(ss, token, ';')) {
         // trim token
         string t = trim(token);
-        if (!t.empty())
-            cout << "  [" << (idx < 10 ? " " : "") << idx++ << "] " << t << "\n";
+        if (!t.empty()) {
+            cout << "  [" << (idx < 10 ? " " : "") << idx << "] " << t << "\n";
+            idx++;
+        }
     }
 
     cout << "  " << string(44, '=') << "\n\n";
@@ -257,9 +259,9 @@ void cmd_addpath(const string &new_dir) {
  * Trả về:
  *   0  → exit
  *   1  → đã xử lý, continue
- *  -1  → không phải lệnh của Sơn
+ *  -1  → không phải built-in command
  * ========================================================= */
-int handle_son_command(const string &cmd_line) {
+int handle_builtin_command(const string &cmd_line) {
     auto [verb, args] = split_cmd(cmd_line);
 
     if (verb == "help")    { cmd_help();             return 1; }

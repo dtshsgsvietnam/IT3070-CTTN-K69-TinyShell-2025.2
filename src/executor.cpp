@@ -1,54 +1,11 @@
-#include "huy_commands.hpp"
+#include "executor.hpp"
 
 #include <windows.h>
 #include <cstdio>
 #include <cstring>
 #include <string>
-#include <algorithm>
 
-// Danh sach background process dang chay
-std::vector<BackgroundProcess> background_processes;
-
-// Loai bo cac process da ket thuc
-void cleanup_finished_processes()
-{
-    for (size_t i = 0; i < background_processes.size();)
-    {
-        HANDLE process_handle = (HANDLE)background_processes[i].process_handle;
-        HANDLE thread_handle = (HANDLE)background_processes[i].thread_handle;
-
-        DWORD exit_code = 0;
-        if (GetExitCodeProcess(process_handle, &exit_code) && exit_code != STILL_ACTIVE)
-        {
-            // Process da ket thuc
-            CloseHandle(process_handle);
-            CloseHandle(thread_handle);
-            background_processes.erase(background_processes.begin() + i);
-        }
-        else
-        {
-            i++;
-        }
-    }
-}
-
-// In danh sach process dang chay
-void print_running_processes()
-{
-    cleanup_finished_processes();
-
-    if (background_processes.empty())
-    {
-        std::printf("  No background processes running.\n");
-        return;
-    }
-
-    std::printf("  Background processes:\n");
-    for (const auto &proc : background_processes)
-    {
-        std::printf("    PID: %u | Command: %s\n", proc.pid, proc.command);
-    }
-}
+#include "process_manager.hpp"
 
 // Kiem tra neu lenh ket thuc bang &
 static bool is_background_command(const std::string &cmd, std::string &cmd_without_amp)
@@ -159,8 +116,8 @@ static void execute_background(const char *cmd_line)
     std::printf("  [%u] %s\n", bg_proc.pid, cmd_line);
 }
 
-// Xu ly lenh cua Huy
-int handle_huy_command(const char *cmd_line)
+// Xu ly lenh ngoai
+int handle_external_command(const char *cmd_line)
 {
     if (cmd_line == nullptr || cmd_line[0] == '\0')
     {

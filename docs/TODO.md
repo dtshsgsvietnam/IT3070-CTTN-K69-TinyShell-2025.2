@@ -1,135 +1,40 @@
-# TODO - Phan chia nhiem vu TinyShell
+# Project 1: Tiny Shell (myShell)
 
-Tai lieu nay tong hop phan cong tu `Project-1.docx` va gan voi cau truc hien tai cua du an.
+## 1. Giới thiệu & Mục đích
 
-## Trang thai chung
+### Giới thiệu
+Dự án yêu cầu thiết kế và cài đặt một giao diện dòng lệnh (*shell*) đơn giản chạy trên hệ điều hành Windows, được đặt tên là **myShell**.
 
-- [x] Tao khung shell chinh trong `src/main.cpp`
-- [x] Tach source vao `src/`, header vao `include/`, tai lieu vao `docs/`
-- [x] Them `Makefile` build ra `bin/myShell.exe`
-- [x] Them `.gitignore`
-- [x] Tao module placeholder cho Huy/Manh/Cuong trong `src/` va `include/`
-- [x] Tich hop cac module Huy/Manh/Cuong vao dispatcher trong `src/main.cpp`
-- [ ] Kiem thu tong hop cac lenh sau khi merge
+### Mục đích
+* **Nghiên cứu API:** Tìm hiểu và trực tiếp áp dụng các hàm API quản lý tiến trình (Process Management) trong môi trường Windows.
+* **Hiểu cơ chế hoạt động:** Nắm vững cách thức cài đặt cấu trúc vòng lặp điều khiển và phương thức hoạt động của một chương trình *shell* trong thực tế.
 
-## Son
+---
 
-Phu trach: cac lenh dac biet va bien moi truong.
+## 2. Yêu cầu tính năng (Nội dung thực hiện)
 
-- [x] `exit`: thoat shell
-- [x] `help`: in danh sach lenh
-- [x] `date`: hien thi ngay hien tai
-- [x] `time`: hien thi gio hien tai
-- [x] `dir [path]`: liet ke noi dung thu muc
-- [x] `path`: xem bien moi truong `PATH`
-- [x] `addpath <dir>`: them thu muc vao `PATH` trong phien shell hien tai
-- [ ] Kiem tra lai output tieng Viet tren terminal Windows
-- [ ] Sua warning trong `cmd_path()` neu duoc phep sua code
+### A. Cơ chế nhận lệnh & Chế độ thực thi (Execution Modes)
+Chương trình hoạt động theo chu kỳ liên tục: nhận chuỗi lệnh nhập vào, phân tích cú pháp (parse), và gọi API hệ điều hành để tạo **tiến trình con (child process)** thực thi. Hỗ trợ hai chế độ:
+* **Foreground mode (Tiền cảnh):** Chế độ mặc định. Shell cha phải tạm dừng và đợi (wait) cho đến khi tiến trình con kết thúc hoàn toàn mới quay lại nhận lệnh tiếp theo.
+* **Background mode (Hậu cảnh):** Thường kích hoạt khi có ký hiệu đặc biệt cuối lệnh (ví dụ: `&`). Shell cha và tiến trình con sẽ thực hiện song song; Shell lập tức hiển thị dấu nhắc cho người dùng nhập lệnh mới mà không cần đợi tiến trình con.
 
-File lien quan:
+### B. Quản lý tiến trình chạy ngầm
+Shell phải cung cấp các lệnh nội trú chuyên biệt để quản lý và kiểm soát các tiến trình đang chạy ở chế độ Background:
+* **List:** In ra danh sách toàn bộ các tiến trình ngầm kèm thông tin chi tiết: `Process ID` (Mã định danh), `Cmd Name` (Tên lệnh/chương trình), và `Status` (Trạng thái hoạt động).
+* **Kill:** Bắt buộc chấm dứt (terminate) một tiến trình ngầm đang chọn.
+* **Stop:** Tạm dừng (pause) một tiến trình ngầm đang chạy.
+* **Resume:** Tiếp tục cho phép tiến trình ngầm đang tạm dừng hoạt động trở lại.
 
-- `src/son_commands.cpp`
-- `include/son_commands.hpp`
+### C. Các lệnh nội trú đặc biệt (Built-in Commands)
+Shell cần tự xử lý nội bộ các lệnh sau thay vì chuyển tiếp cho hệ thống tạo tiến trình bên ngoài:
+* **Lệnh cơ bản:** `exit` (thoát khỏi myShell), `help` (hiển thị hướng dẫn sử dụng), `date` (xem ngày hệ thống), `time` (xem giờ hệ thống), `dir` (liệt kê nội dung thư mục).
+* **Quản lý môi trường:** `path` / `addpath` dùng để xem và thiết lập/bổ sung giá trị cho biến môi trường PATH, phục vụ việc tìm kiếm file thực thi.
 
-## Huy
+### D. Xử lý tín hiệu ngắt từ bàn phím (Signal Handling)
+* Shell phải bắt được tín hiệu từ tổ hợp phím **Ctrl + C** khi người dùng nhấn từ bàn phím.
+* Ý nghĩa: Dùng để hủy bỏ (cancel/terminate) tiến trình *foreground* đang được thực thi.
+* **Yêu cầu quan trọng:** Tín hiệu ngắt này chỉ tác động lên tiến trình con đang chạy tiền cảnh, tuyệt đối không được làm crash hoặc thoát chương trình `myShell` chính.
 
-Phu trach: shell nhan lenh, phan tich lenh va tao tien trinh con de thuc hien.
-
-- [x] Tao `src/huy_commands.cpp`
-- [x] Tao `include/huy_commands.hpp`
-- [ ] Implement logic that trong `handle_huy_command()`
-- [ ] Chay lenh foreground: shell doi tien trinh con ket thuc
-- [ ] Chay lenh background voi cu phap ket thuc bang `&`
-- [ ] Luu thong tin background process de phan `list/kill/stop/resume` su dung
-- [ ] Xu ly loi khi lenh khong ton tai hoac khong tao duoc process
-- [x] Cap nhat `Makefile` de build module cua Huy
-
-Yeu cau nghiem thu:
-
-- [ ] `notepad` hoac mot lenh tuong duong chay foreground dung cach
-- [ ] `notepad &` hoac mot lenh tuong duong chay background va shell tiep tuc nhan lenh
-- [ ] Lenh sai in thong bao loi ro rang, khong lam shell thoat
-
-## Manh
-
-Phu trach: quan ly tien trinh va xu ly tin hieu ngat tu ban phim.
-
-- [x] Tao `src/manh_commands.cpp`
-- [x] Tao `include/manh_commands.hpp`
-- [ ] Implement logic that trong `handle_manh_command()`
-- [ ] `list`: liet ke cac background process dang chay
-- [ ] `kill <pid>`: ket thuc mot background process
-- [ ] `stop <pid>`: tam dung mot background process
-- [ ] `resume <pid>`: tiep tuc mot background process da tam dung
-- [ ] Xu ly Ctrl+C de huy foreground process dang chay
-- [ ] Don dep handle/process da ket thuc de tranh ro ri tai nguyen
-- [x] Cap nhat `Makefile` de build module cua Manh
-
-Yeu cau nghiem thu:
-
-- [ ] `list` chi hien thi process con song
-- [ ] `kill <pid>` ket thuc dung process
-- [ ] `stop <pid>` tam dung dung process
-- [ ] `resume <pid>` tiep tuc dung process
-- [ ] Ctrl+C khong lam shell chinh bi thoat ngoai y muon
-
-## Cuong
-
-Phu trach: thuc thi file batch.
-
-- [x] Tao `src/cuong_commands.cpp`
-- [x] Tao `include/cuong_commands.hpp`
-- [ ] Implement logic that trong `handle_cuong_command()`
-- [ ] Nhan dien va thuc thi file `*.bat`
-- [ ] Truyen duong dan file batch vao process thuc thi phu hop
-- [ ] Xu ly file `.bat` khong ton tai
-- [ ] Viet mot vai file `.bat` mau de kiem thu
-- [x] Cap nhat `Makefile` de build module cua Cuong
-
-Yeu cau nghiem thu:
-
-- [ ] Chay duoc file `.bat` trong thu muc hien tai
-- [ ] Chay duoc file `.bat` bang duong dan tuong doi hoac tuyet doi
-- [ ] File `.bat` loi hoac khong ton tai khong lam shell crash
-
-## Tich hop
-
-`src/main.cpp` hien dang dieu phoi lenh theo thu tu:
-
-1. Lenh cua Son: `handle_son_command()`
-2. Lenh quan ly tien trinh cua Manh: `kill`, `stop`, `resume`, `list`
-3. File `.bat` cua Cuong
-4. Cac lenh con lai cua Huy
-
-Checklist khi merge code:
-
-- [x] Them header cua tung module vao `src/main.cpp`
-- [x] Xoa cac stub `handle_huy_command()`, `handle_manh_command()`, `handle_cuong_command()` khoi `src/main.cpp`
-- [ ] Dam bao moi module tra ve trang thai ro rang sau khi xu ly lenh
-- [x] Cap nhat `Makefile` voi tat ca file `.cpp` moi
-- [x] Chay `mingw32-make -B`
-- [ ] Chay thu cac lenh trong README
-- [ ] Cap nhat README neu co thay doi ve lenh hoac cach build
-
-## Goi y cau truc sau khi hoan thien
-
-```text
-TinyShell/
-├── src/
-│   ├── main.cpp
-│   ├── son_commands.cpp
-│   ├── huy_commands.cpp
-│   ├── manh_commands.cpp
-│   └── cuong_commands.cpp
-├── include/
-│   ├── son_commands.hpp
-│   ├── huy_commands.hpp
-│   ├── manh_commands.hpp
-│   └── cuong_commands.hpp
-├── docs/
-│   └── TODO.md
-├── bin/
-├── Makefile
-├── README.md
-└── .gitignore
-```
+### E. Thực thi tệp lệnh Script (`*.bat`)
+* Shell có khả năng chấp nhận đầu vào là một tệp tin văn bản có định dạng `*.bat`.
+* Đọc và tự động thực thi tuần tự từng dòng lệnh chứa trong file đó như cách người dùng nhập thủ công từ bàn phím.

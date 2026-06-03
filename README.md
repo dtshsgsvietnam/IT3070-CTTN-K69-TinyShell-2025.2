@@ -1,65 +1,58 @@
 # TinyShell
 
-TinyShell là một shell đơn giản chạy trên Windows, viết bằng C++ và WinAPI.
-Chương trình nhận lệnh từ người dùng theo vòng lặp REPL, xử lý các lệnh nội bộ
-và có khung dispatcher để tích hợp các phần mở rộng của nhóm.
+TinyShell là shell đơn giản chạy trên Windows, viết bằng C++ và WinAPI. Chương
+trình chạy theo vòng lặp REPL: in prompt, đọc lệnh, dispatch sang module phù hợp
+rồi tiếp tục nhận lệnh mới.
 
 ## Cấu trúc dự án
 
 ```text
 TinyShell/
 ├── src/
-│   ├── main.cpp              # Vòng lặp REPL chính và dispatcher của shell
-│   ├── son_commands.cpp      # Cài đặt các lệnh built-in của Sơn
-│   ├── huy_commands.cpp      # Placeholder phần foreground/background
-│   ├── manh_commands.cpp     # Placeholder phần quản lý tiến trình
-│   └── cuong_commands.cpp    # Placeholder phần chạy file .bat
+│   ├── main.cpp              # Điểm vào chương trình, REPL và prompt
+│   ├── shell.cpp             # Parse/dispatch lệnh chung
+│   ├── builtins.cpp          # help, exit, date, time, dir, path, addpath
+│   ├── executor.cpp          # Chạy lệnh foreground/background
+│   ├── process_manager.cpp   # Dữ liệu background process và stub list/kill/stop/resume
+│   └── script_runner.cpp     # Stub chạy file .bat
 ├── include/
-│   ├── son_commands.hpp      # Khai báo public cho module Sơn
-│   ├── huy_commands.hpp      # Khai báo public cho module Huy
-│   ├── manh_commands.hpp     # Khai báo public cho module Mạnh
-│   └── cuong_commands.hpp    # Khai báo public cho module Cường
-├── bin/
-│   └── myShell.exe           # File thực thi sau khi build
-├── Makefile                  # Cấu hình build bằng MinGW
-├── README.md                 # Tài liệu dự án
-└── .gitignore                # Các file/thư mục không đưa vào git
+│   ├── shell.hpp
+│   ├── builtins.hpp
+│   ├── executor.hpp
+│   ├── process_manager.hpp
+│   └── script_runner.hpp
+├── docs/
+│   └── TODO.md               # Yêu cầu/tính năng cần thực hiện
+├── Makefile                  # Build bằng MinGW
+├── README.md
+└── .gitignore
 ```
 
-## Các file chính
+`bin/myShell.exe` là file build output và được ignore bởi `.gitignore`.
 
-| File | Vai trò |
-|---|---|
-| `src/main.cpp` | Chứa `main()`, in prompt, đọc lệnh và điều phối sang các module |
-| `src/son_commands.cpp` | Cài đặt `help`, `exit`, `date`, `time`, `dir`, `path`, `addpath` |
-| `src/huy_commands.cpp` | Stub cho phần chạy lệnh foreground/background |
-| `src/manh_commands.cpp` | Stub cho phần quản lý tiến trình |
-| `src/cuong_commands.cpp` | Stub cho phần thực thi file `.bat` |
-| `include/son_commands.hpp` | Khai báo các hàm public của module Sơn |
-| `include/huy_commands.hpp` | Khai báo hàm public của module Huy |
-| `include/manh_commands.hpp` | Khai báo hàm public của module Mạnh |
-| `include/cuong_commands.hpp` | Khai báo hàm public của module Cường |
-| `Makefile` | Build toàn bộ source trong `src/` thành `bin/myShell.exe` |
-| `.gitignore` | Bỏ qua output build, file tạm, file editor |
+## Luồng xử lý
 
-## Biên dịch
+1. `main.cpp` set console UTF-8, in banner, in prompt và đọc một dòng lệnh.
+2. `shell.cpp` trim lệnh và gọi `dispatch_command()`.
+3. Thứ tự dispatch:
+   - `builtins.cpp`: lệnh nội trú.
+   - `process_manager.cpp`: `list`, `kill`, `stop`, `resume`.
+   - `script_runner.cpp`: lệnh có token đầu kết thúc bằng `.bat`.
+   - `executor.cpp`: các lệnh ngoài, gồm foreground và background với dấu `&`.
+
+## Biên dịch và chạy
 
 Yêu cầu: Windows + MinGW có `g++` và `mingw32-make`.
 
 ```bash
 mingw32-make
+bin\myShell.exe
 ```
 
-File chạy sẽ được tạo tại:
-
-```text
-bin/myShell.exe
-```
-
-Có thể build thủ công bằng:
+Build thủ công tương đương:
 
 ```bash
-g++ -Wall -Wextra -std=c++17 -g -Iinclude -o bin/myShell.exe src/main.cpp src/son_commands.cpp src/huy_commands.cpp src/manh_commands.cpp src/cuong_commands.cpp -lkernel32
+g++ -Wall -Wextra -std=c++17 -g -Iinclude -o bin/myShell.exe src/main.cpp src/shell.cpp src/builtins.cpp src/executor.cpp src/process_manager.cpp src/script_runner.cpp -lkernel32
 ```
 
 Xóa file build:
@@ -68,74 +61,32 @@ Xóa file build:
 mingw32-make clean
 ```
 
-## Chạy chương trình
+## Tính năng hiện tại
 
-```bash
-bin\myShell.exe
-```
+Đã có:
 
-Sau khi chạy, shell hiển thị prompt dạng:
-
-```text
-myShell\C:\path\to\current\directory>
-```
-
-Người dùng nhập lệnh tại prompt này.
-
-## Luồng hoạt động
-
-`src/main.cpp` chạy vòng lặp chính:
-
-1. Lấy thư mục hiện tại bằng `GetCurrentDirectoryA`.
-2. In prompt `myShell\<current_directory>`.
-3. Đọc một dòng lệnh từ người dùng.
-4. Bỏ qua dòng trống.
-5. Gọi `handle_son_command()` để xử lý các lệnh built-in.
-6. Nếu không phải lệnh của Sơn, dispatcher chuyển tiếp sang các phần khác:
-   `handle_manh_command()`, `handle_cuong_command()`, hoặc `handle_huy_command()`.
-
-Hiện tại các module Huy/Mạnh/Cường đã có file riêng trong `src/` và `include/`,
-nhưng phần xử lý bên trong vẫn là stub để chờ tích hợp code thật.
-
-## Các lệnh đã hỗ trợ
-
-### Lệnh đặc biệt
-
-| Lệnh | Mô tả |
+| Nhóm | Lệnh/chức năng |
 |---|---|
-| `help` | In danh sách lệnh |
-| `exit` | Thoát khỏi myShell |
-| `date` | Hiển thị ngày hiện tại |
-| `time` | Hiển thị giờ hiện tại |
-| `dir [path]` | Liệt kê nội dung thư mục |
+| Built-in | `help`, `exit`, `date`, `time`, `dir [path]` |
+| PATH | `path`, `addpath <dir>` |
+| Thực thi lệnh ngoài | Foreground mặc định, background khi lệnh kết thúc bằng `&` |
 
-### Lệnh môi trường
+Đang chờ hoàn thiện:
 
-| Lệnh | Mô tả |
+| Nhóm | Trạng thái |
 |---|---|
-| `path` | In từng entry của biến môi trường `PATH` |
-| `addpath <dir>` | Thêm thư mục vào `PATH` của phiên shell hiện tại |
-
-Lưu ý: `addpath` dùng `SetEnvironmentVariableA`, nên thay đổi chỉ có hiệu lực
-trong process `myShell` hiện tại và các child process của nó. Lệnh này không sửa
-`PATH` trong registry Windows.
-
-## Các phần đang chờ tích hợp
-
-| Nhóm chức năng | Dispatcher | Trạng thái |
-|---|---|---|
-| Foreground/background execution | `handle_huy_command()` | Stub |
-| Quản lý tiến trình: `list`, `kill`, `stop`, `resume` | `handle_manh_command()` | Stub |
-| Thực thi file `.bat` | `handle_cuong_command()` | Stub |
+| Quản lý process nền | `list`, `kill`, `stop`, `resume` đang là stub |
+| Script `.bat` | Đã có dispatcher, phần chạy từng dòng đang là stub |
+| Ctrl+C | Chưa có handler riêng để hủy foreground process |
 
 ## Ví dụ
 
 ```text
-myShell\C:\Users\Son>help
-myShell\C:\Users\Son>date
-myShell\C:\Users\Son>time
-myShell\C:\Users\Son>dir
-myShell\C:\Users\Son>path
-myShell\C:\Users\Son>addpath C:\MyTools
-myShell\C:\Users\Son>exit
+myShell\C:\Project>help
+myShell\C:\Project>dir
+myShell\C:\Project>path
+myShell\C:\Project>addpath C:\MyTools
+myShell\C:\Project>ping 127.0.0.1
+myShell\C:\Project>notepad &
+myShell\C:\Project>exit
 ```
