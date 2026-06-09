@@ -14,7 +14,7 @@ TinyShell/
 │   ├── builtins.cpp          # help, exit, date, time, dir, path, addpath
 │   ├── executor.cpp          # Chạy lệnh foreground/background
 │   ├── process_manager.cpp   # Quản lý background process: list/kill/stop/resume
-│   └── script_runner.cpp     # Stub chạy file .bat
+│   └── script_runner.cpp     # Chạy từng dòng trong file .bat
 ├── include/
 │   ├── shell.hpp
 │   ├── builtins.hpp
@@ -77,7 +77,7 @@ mingw32-make clean
 
 | Nhóm | Trạng thái |
 |---|---|
-| Script `.bat` | Đã có dispatcher, phần chạy từng dòng đang là stub |
+| Script `.bat` | Đọc file `.bat` và thực thi tuần tự từng dòng |
 
 ## Ví dụ
 

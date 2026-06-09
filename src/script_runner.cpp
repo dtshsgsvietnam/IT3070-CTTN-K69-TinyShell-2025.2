@@ -1,9 +1,84 @@
 #include "script_runner.hpp"
+#include "shell.hpp"
 
 #include <cstdio>
+#include <fstream>
+#include <string>
 
-int handle_script_command(const char *cmd_line) {
-    (void)cmd_line;
-    std::printf("  [Cuong] .bat execution - chua implement\n");
+static std::string get_script_path(const std::string &cmd_line)
+{
+    std::string text = trim_command(cmd_line);
+    if (text.empty())
+    {
+        return "";
+    }
+
+    if (text[0] == '"')
+    {
+        size_t end_quote = text.find('"', 1);
+        if (end_quote == std::string::npos)
+        {
+            return "";
+        }
+        return text.substr(1, end_quote - 1);
+    }
+
+    return first_token(text);
+}
+
+static void remove_utf8_bom(std::string &line)
+{
+    if (line.size() >= 3 &&
+        static_cast<unsigned char>(line[0]) == 0xEF &&
+        static_cast<unsigned char>(line[1]) == 0xBB &&
+        static_cast<unsigned char>(line[2]) == 0xBF)
+    {
+        line.erase(0, 3);
+    }
+}
+
+int handle_script_command(const char *cmd_line)
+{
+    if (cmd_line == nullptr || cmd_line[0] == '\0')
+    {
+        return 1;
+    }
+
+    std::string script_path = get_script_path(cmd_line);
+    if (script_path.empty())
+    {
+        std::printf("  [script] Cu phap: <file>.bat\n");
+        return 1;
+    }
+
+    std::ifstream file(script_path);
+    if (!file.is_open())
+    {
+        std::printf("  [script] Khong mo duoc file: %s\n", script_path.c_str());
+        return 1;
+    }
+
+    std::string line;
+    int line_number = 0;
+    while (std::getline(file, line))
+    {
+        line_number++;
+        if (line_number == 1)
+        {
+            remove_utf8_bom(line);
+        }
+
+        std::string command = trim_command(line);
+        if (command.empty())
+        {
+            continue;
+        }
+
+        if (!dispatch_command(command))
+        {
+            return 0;
+        }
+    }
+
     return 1;
 }
