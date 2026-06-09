@@ -84,7 +84,7 @@ void setup_ctrl_c_handler(void)
 
     if (!SetConsoleCtrlHandler(ctrl_c_handler, TRUE))
     {
-        std::printf("  [Ctrl+C] Khong the dang ky handler (ma loi: %lu).\n", GetLastError());
+        std::printf("  [Ctrl+C] Không thể đăng ký trình xử lý (mã lỗi: %lu).\n", GetLastError());
     }
 }
 
@@ -136,7 +136,7 @@ static void execute_foreground(const char *cmd_line)
             ))
     {
         DWORD error = GetLastError();
-        std::printf("  Error: Cannot execute command (Error code: %lu)\n", error);
+        std::printf("  Lỗi: Không thể thực thi lệnh (mã lỗi: %lu)\n", error);
         return;
     }
 
@@ -177,12 +177,12 @@ static void execute_foreground(const char *cmd_line)
         if (was_cancelled)
         {
             restore_console_after_foreground();
-            std::printf("\n  [Ctrl+C] Da huy tien trinh foreground PID %lu.\n",
+            std::printf("\n  [Ctrl+C] Đã hủy tiến trình tiền cảnh PID %lu.\n",
                         process_info.dwProcessId);
         }
         else if (exit_code != 0)
         {
-            std::printf("  Process exited with code: %lu\n", exit_code);
+            std::printf("  Tiến trình kết thúc với mã: %lu\n", exit_code);
         }
     }
 
@@ -220,7 +220,7 @@ static void execute_background(const char *cmd_line)
             &process_info))
     {
         DWORD error = GetLastError();
-        std::printf("  Error: Cannot execute background command (Error code: %lu)\n", error);
+        std::printf("  Lỗi: Không thể thực thi lệnh hậu cảnh (mã lỗi: %lu)\n", error);
         return;
     }
 
@@ -256,7 +256,7 @@ static void execute_background(const char *cmd_line)
         }
         CloseHandle(process_info.hProcess);
         CloseHandle(process_info.hThread);
-        std::printf("  Error: Cannot start background command (Error code: %lu)\n", error);
+        std::printf("  Lỗi: Không thể bắt đầu lệnh hậu cảnh (mã lỗi: %lu)\n", error);
         return;
     }
 

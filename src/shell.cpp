@@ -111,7 +111,7 @@ void print_banner(void)
     std::printf("\n");
     std::printf("  ============================================\n");
     std::printf("                  myShell v1.0                \n");
-    std::printf("           Type 'help' to list commands       \n");
+    std::printf("        Gõ 'help' để xem danh sách lệnh       \n");
     std::printf("  ============================================\n\n");
 }
 
