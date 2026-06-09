@@ -47,14 +47,14 @@ int handle_script_command(const char *cmd_line)
     std::string script_path = get_script_path(cmd_line);
     if (script_path.empty())
     {
-        std::printf("  [script] Cú pháp: <tệp>.bat\n");
+        std::printf("  [script] Cú pháp: <file>.bat\n");
         return 1;
     }
 
     std::ifstream file(script_path);
     if (!file.is_open())
     {
-        std::printf("  [script] Không mở được tệp: %s\n", script_path.c_str());
+        std::printf("  [script] Không mở được file: %s\n", script_path.c_str());
         return 1;
     }
 

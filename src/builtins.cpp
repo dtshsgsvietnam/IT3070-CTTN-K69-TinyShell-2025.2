@@ -31,25 +31,25 @@ void cmd_help() {
     cout << "  exit          : Thoát khỏi myShell\n";
     cout << "  date          : Hiển thị ngày hiện tại\n";
     cout << "  time          : Hiển thị giờ hiện tại\n";
-    cout << "  dir [path]    : Liệt kê nội dung thư mục\n\n";
+    cout << "  dir [path]    : Liệt kê nội dung directory\n\n";
 
     cout << "  ── Biến môi trường ────────────────────────────────\n";
     cout << "  path          : Xem biến môi trường PATH\n";
     cout << "  addpath <dir> : Thêm <dir> vào PATH trong phiên này\n\n";
 
-    cout << "  ── Quản lý tiến trình ─────────────────────────────\n";
-    cout << "  list          : Liệt kê tiến trình nền\n";
-    cout << "  kill   <pid>  : Kết thúc tiến trình\n";
-    cout << "  stop   <pid>  : Tạm dừng tiến trình\n";
-    cout << "  resume <pid>  : Tiếp tục tiến trình\n\n";
+    cout << "  ── Quản lý process ────────────────────────────────\n";
+    cout << "  list          : Liệt kê background process\n";
+    cout << "  kill   <pid>  : Kết thúc process\n";
+    cout << "  stop   <pid>  : Tạm dừng process\n";
+    cout << "  resume <pid>  : Tiếp tục process\n\n";
 
     cout << "  ── Thực thi ───────────────────────────────────────\n";
-    cout << "  <lệnh>        : Chạy tiền cảnh (đợi kết thúc)\n";
-    cout << "  <lệnh> &      : Chạy hậu cảnh (không đợi)\n";
-    cout << "  <tệp>.bat     : Thực thi tệp lệnh .bat\n\n";
+    cout << "  <lệnh>        : Chạy foreground (đợi kết thúc)\n";
+    cout << "  <lệnh> &      : Chạy background (không đợi)\n";
+    cout << "  <file>.bat    : Thực thi file batch\n\n";
 
     cout << "  ── Phím tắt ───────────────────────────────────────\n";
-    cout << "  Ctrl+C        : Hủy tiến trình tiền cảnh\n\n";
+    cout << "  Ctrl+C        : Hủy foreground process\n\n";
 }
 
 /* =========================================================
@@ -110,7 +110,7 @@ void cmd_dir(const string &path) {
         return;
     }
 
-    cout << "\n  Nội dung thư mục: " << target << "\n";
+    cout << "\n  Nội dung directory: " << target << "\n";
     cout << "  " << string(70, '-') << "\n";
     cout << "  " << left;
     printf("  %-38s %-14s %s\n", "Tên", "Kích thước", "Ngày sửa đổi");
@@ -132,7 +132,7 @@ void cmd_dir(const string &path) {
                 st.wDay, st.wMonth, st.wYear, st.wHour, st.wMinute);
 
         if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            printf("  %-38s %-14s %s\n", fd.cFileName, "<THƯ MỤC>", date_buf);
+            printf("  %-38s %-14s %s\n", fd.cFileName, "<DIR>", date_buf);
             dir_count++;
         } else {
             ULONGLONG sz = ((ULONGLONG)fd.nFileSizeHigh << 32) | fd.nFileSizeLow;
@@ -156,8 +156,8 @@ void cmd_dir(const string &path) {
     else                               sprintf(total_buf, "%llu B",  total_bytes);
 
     cout << "  " << string(70, '-') << "\n";
-    cout << "  " << file_count << " tệp  |  "
-         << dir_count << " thư mục  |  Tổng: " << total_buf << "\n\n";
+    cout << "  " << file_count << " file(s)  |  "
+         << dir_count << " directory  |  Tổng: " << total_buf << "\n\n";
 }
 
 /* =========================================================
@@ -235,7 +235,7 @@ void cmd_path() {
  * ========================================================= */
 void cmd_addpath(const string &new_dir) {
     if (new_dir.empty()) {
-        cout << "  [addpath] Cú pháp: addpath <thư mục>\n";
+        cout << "  [addpath] Cú pháp: addpath <directory>\n";
         return;
     }
 
@@ -244,7 +244,7 @@ void cmd_addpath(const string &new_dir) {
     if (attr == INVALID_FILE_ATTRIBUTES) {
         cout << "  [addpath] Cảnh báo: '" << new_dir << "' không tồn tại.\n";
     } else if (!(attr & FILE_ATTRIBUTE_DIRECTORY)) {
-        cout << "  [addpath] '" << new_dir << "' không phải thư mục.\n";
+        cout << "  [addpath] '" << new_dir << "' không phải directory.\n";
         return;
     }
 

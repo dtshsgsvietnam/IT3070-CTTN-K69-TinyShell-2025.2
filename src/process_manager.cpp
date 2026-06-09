@@ -147,18 +147,18 @@ void print_running_processes()
 
     if (background_processes.empty())
     {
-        std::printf("  Không có tiến trình nền nào đang chạy.\n");
+        std::printf("  Không có background process nào đang chạy.\n");
         return;
     }
 
-    std::printf("  Danh sách tiến trình nền:\n");
-    std::printf("  %-10s %-12s %s\n", "PID", "Trạng thái", "Tên lệnh");
+    std::printf("  Danh sách background process:\n");
+    std::printf("  %-10s %-12s %s\n", "PID", "Status", "Cmd Name");
     std::printf("  %-10s %-12s %s\n", "----------", "------------", "----------------");
     for (const auto &proc : background_processes)
     {
         std::printf("  %-10u %-12s %s\n",
                     proc.pid,
-                    proc.is_stopped ? "Tạm dừng" : "Đang chạy",
+                    proc.is_stopped ? "Stopped" : "Running",
                     proc.command);
     }
 }
@@ -218,7 +218,7 @@ static void kill_process(uint32_t pid)
     size_t index = 0;
     if (!find_process_index(pid, index))
     {
-        std::printf("  [kill] Không tìm thấy PID %u trong danh sách tiến trình nền.\n", pid);
+        std::printf("  [kill] Không tìm thấy PID %u trong danh sách background process.\n", pid);
         return;
     }
 
@@ -238,7 +238,7 @@ static void kill_process(uint32_t pid)
 
     if (!terminated)
     {
-        std::printf("  [kill] Không thể kết thúc PID %u (mã lỗi: %lu).\n", pid, GetLastError());
+        std::printf("  [kill] Không thể terminate PID %u (mã lỗi: %lu).\n", pid, GetLastError());
         return;
     }
 
@@ -251,7 +251,7 @@ static void kill_process(uint32_t pid)
     }
     background_processes.erase(background_processes.begin() + index);
 
-    std::printf("  [kill] Đã kết thúc PID %u.\n", pid);
+    std::printf("  [kill] Đã terminate PID %u.\n", pid);
 }
 
 static void stop_process(uint32_t pid)
@@ -259,24 +259,24 @@ static void stop_process(uint32_t pid)
     size_t index = 0;
     if (!find_process_index(pid, index))
     {
-        std::printf("  [stop] Không tìm thấy PID %u trong danh sách tiến trình nền.\n", pid);
+        std::printf("  [stop] Không tìm thấy PID %u trong danh sách background process.\n", pid);
         return;
     }
 
     if (background_processes[index].is_stopped)
     {
-        std::printf("  [stop] PID %u đã đang tạm dừng.\n", pid);
+        std::printf("  [stop] PID %u đang ở trạng thái Stopped.\n", pid);
         return;
     }
 
     if (!suspend_or_resume_process_threads(pid, true))
     {
-        std::printf("  [stop] Không thể tạm dừng PID %u.\n", pid);
+        std::printf("  [stop] Không thể suspend PID %u.\n", pid);
         return;
     }
 
     background_processes[index].is_stopped = true;
-    std::printf("  [stop] Đã tạm dừng PID %u.\n", pid);
+    std::printf("  [stop] Đã suspend PID %u.\n", pid);
 }
 
 static void resume_process(uint32_t pid)
@@ -284,24 +284,24 @@ static void resume_process(uint32_t pid)
     size_t index = 0;
     if (!find_process_index(pid, index))
     {
-        std::printf("  [resume] Không tìm thấy PID %u trong danh sách tiến trình nền.\n", pid);
+        std::printf("  [resume] Không tìm thấy PID %u trong danh sách background process.\n", pid);
         return;
     }
 
     if (!background_processes[index].is_stopped)
     {
-        std::printf("  [resume] PID %u vẫn đang chạy.\n", pid);
+        std::printf("  [resume] PID %u vẫn đang Running.\n", pid);
         return;
     }
 
     if (!suspend_or_resume_process_threads(pid, false))
     {
-        std::printf("  [resume] Không thể tiếp tục PID %u.\n", pid);
+        std::printf("  [resume] Không thể resume PID %u.\n", pid);
         return;
     }
 
     background_processes[index].is_stopped = false;
-    std::printf("  [resume] Đã tiếp tục PID %u.\n", pid);
+    std::printf("  [resume] Đã resume PID %u.\n", pid);
 }
 
 int handle_process_command(const char *cmd_line) {
@@ -340,7 +340,7 @@ int handle_process_command(const char *cmd_line) {
     }
     else
     {
-        std::printf("  Lệnh quản lý tiến trình không hợp lệ: %s\n", verb.c_str());
+        std::printf("  Lệnh quản lý process không hợp lệ: %s\n", verb.c_str());
     }
 
     return 1;
