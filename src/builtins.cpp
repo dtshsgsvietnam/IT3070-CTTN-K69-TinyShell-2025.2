@@ -21,31 +21,31 @@ using namespace std;
 void cmd_help() {
     cout << "\n";
     cout << "    ╔══════════════════════════════════════════╗\n";
-    cout << "    ║         WELCOME TO MY SHELL              ║\n";
+    cout << "    ║           CHÀO MỪNG ĐẾN MYSHELL         ║\n";
     cout << "    ╚══════════════════════════════════════════╝\n\n";
 
-    cout << "  myShell supports the following commands:\n\n";
+    cout << "  myShell hỗ trợ các lệnh sau:\n\n";
 
     cout << "  ── Lệnh đặc biệt ──────────────────────────────────\n";
     cout << "  help          : Hiển thị danh sách lệnh này\n";
     cout << "  exit          : Thoát khỏi myShell\n";
     cout << "  date          : Hiển thị ngày hiện tại\n";
     cout << "  time          : Hiển thị giờ hiện tại\n";
-    cout << "  dir [path]    : Liệt kê nội dung thư mục\n\n";
+    cout << "  dir [path]    : Liệt kê nội dung directory\n\n";
 
     cout << "  ── Biến môi trường ────────────────────────────────\n";
     cout << "  path          : Xem biến môi trường PATH\n";
     cout << "  addpath <dir> : Thêm <dir> vào PATH trong phiên này\n\n";
 
-    cout << "  ── Quản lý tiến trình ─────────────────────────────\n";
-    cout << "  list          : Liệt kê background processes\n";
-    cout << "  kill   <pid>  : Kết thúc tiến trình\n";
-    cout << "  stop   <pid>  : Tạm dừng tiến trình\n";
-    cout << "  resume <pid>  : Tiếp tục tiến trình\n\n";
+    cout << "  ── Quản lý process ────────────────────────────────\n";
+    cout << "  list          : Liệt kê background process\n";
+    cout << "  kill   <pid>  : Kết thúc process\n";
+    cout << "  stop   <pid>  : Tạm dừng process\n";
+    cout << "  resume <pid>  : Tiếp tục process\n\n";
 
     cout << "  ── Thực thi ───────────────────────────────────────\n";
-    cout << "  <cmd>         : Foreground (đợi kết thúc)\n";
-    cout << "  <cmd> &       : Background (không đợi)\n";
+    cout << "  <lệnh>        : Chạy foreground (đợi kết thúc)\n";
+    cout << "  <lệnh> &      : Chạy background (không đợi)\n";
     cout << "  <file>.bat    : Thực thi file batch\n\n";
 
     cout << "  ── Phím tắt ───────────────────────────────────────\n";
@@ -110,7 +110,7 @@ void cmd_dir(const string &path) {
         return;
     }
 
-    cout << "\n  Nội dung thư mục: " << target << "\n";
+    cout << "\n  Nội dung directory: " << target << "\n";
     cout << "  " << string(70, '-') << "\n";
     cout << "  " << left;
     printf("  %-38s %-14s %s\n", "Tên", "Kích thước", "Ngày sửa đổi");
@@ -157,7 +157,7 @@ void cmd_dir(const string &path) {
 
     cout << "  " << string(70, '-') << "\n";
     cout << "  " << file_count << " file(s)  |  "
-         << dir_count << " thư mục  |  Tổng: " << total_buf << "\n\n";
+         << dir_count << " directory  |  Tổng: " << total_buf << "\n\n";
 }
 
 /* =========================================================
@@ -235,7 +235,7 @@ void cmd_path() {
  * ========================================================= */
 void cmd_addpath(const string &new_dir) {
     if (new_dir.empty()) {
-        cout << "  [addpath] Cú pháp: addpath <thư mục>\n";
+        cout << "  [addpath] Cú pháp: addpath <directory>\n";
         return;
     }
 
@@ -244,7 +244,7 @@ void cmd_addpath(const string &new_dir) {
     if (attr == INVALID_FILE_ATTRIBUTES) {
         cout << "  [addpath] Cảnh báo: '" << new_dir << "' không tồn tại.\n";
     } else if (!(attr & FILE_ATTRIBUTE_DIRECTORY)) {
-        cout << "  [addpath] '" << new_dir << "' không phải thư mục.\n";
+        cout << "  [addpath] '" << new_dir << "' không phải directory.\n";
         return;
     }
 
@@ -259,7 +259,7 @@ void cmd_addpath(const string &new_dir) {
 
     string new_path = old_path.empty() ? new_dir : old_path + ";" + new_dir;
     if (!SetEnvironmentVariableA("PATH", new_path.c_str())) {
-        cout << "  [addpath] Khong the cap nhat PATH.\n";
+        cout << "  [addpath] Không thể cập nhật PATH.\n";
         return;
     }
 
@@ -280,7 +280,7 @@ int handle_builtin_command(const string &cmd_line) {
     string args = command_args(cmd_line);
 
     if (verb == "help")    { cmd_help();             return 1; }
-    if (verb == "exit")    { cout << "  Đang thoát myShell. Goodbye!\n"; return 0; }
+    if (verb == "exit")    { cout << "  Đang thoát myShell. Tạm biệt!\n"; return 0; }
     if (verb == "date")    { cmd_date();              return 1; }
     if (verb == "time")    { cmd_time_cmd();          return 1; }
     if (verb == "dir")     { cmd_dir(args);           return 1; }

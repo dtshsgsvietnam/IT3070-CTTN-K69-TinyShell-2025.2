@@ -23,7 +23,7 @@ TinyShell/
 │   └── script_runner.hpp
 ├── docs/
 │   └── TODO.md               # Yêu cầu/tính năng cần thực hiện
-├── Makefile                  # Build bằng MinGW
+├── Makefile                  # Biên dịch bằng MinGW
 ├── README.md
 └── .gitignore
 ```
@@ -70,13 +70,8 @@ mingw32-make clean
 | Built-in | `help`, `exit`, `date`, `time`, `dir [path]` |
 | PATH | `path`, `addpath <dir>` |
 | Thực thi lệnh ngoài | Foreground mặc định, background khi lệnh kết thúc bằng `&` |
-| Quản lý process nền | `list`, `kill <pid>`, `stop <pid>`, `resume <pid>` |
-| Ctrl+C | Hủy tiến trình foreground đang chạy, shell chính vẫn tiếp tục |
-
-Đang chờ hoàn thiện:
-
-| Nhóm | Trạng thái |
-|---|---|
+| Quản lý background process | `list`, `kill <pid>`, `stop <pid>`, `resume <pid>` |
+| Ctrl+C | Hủy foreground process đang chạy, shell chính vẫn tiếp tục |
 | Script `.bat` | Đọc file `.bat` và thực thi tuần tự từng dòng |
 
 ## Ví dụ
