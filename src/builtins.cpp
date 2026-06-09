@@ -21,7 +21,7 @@ using namespace std;
 void cmd_help() {
     cout << "\n";
     cout << "    ╔══════════════════════════════════════════╗\n";
-    cout << "    ║           CHÀO MỪNG ĐẾN MYSHELL         ║\n";
+    cout << "    ║           CHÀO MỪNG ĐẾN MYSHELL          ║\n";
     cout << "    ╚══════════════════════════════════════════╝\n\n";
 
     cout << "  myShell hỗ trợ các lệnh sau:\n\n";
