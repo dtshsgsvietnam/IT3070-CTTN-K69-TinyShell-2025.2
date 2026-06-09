@@ -5,6 +5,9 @@ build/
 *.o
 *.obj
 
+# Local script test file
+/test.bat
+
 # Debug symbols and logs
 *.pdb
 *.ilk
