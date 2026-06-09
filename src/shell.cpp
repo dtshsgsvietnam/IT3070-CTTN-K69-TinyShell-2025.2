@@ -12,6 +12,14 @@
 std::string trim_command(const std::string &text)
 {
     size_t start = 0;
+    if (text.size() >= 3 &&
+        static_cast<unsigned char>(text[0]) == 0xEF &&
+        static_cast<unsigned char>(text[1]) == 0xBB &&
+        static_cast<unsigned char>(text[2]) == 0xBF)
+    {
+        start = 3;
+    }
+
     while (start < text.size() &&
            (text[start] == ' ' || text[start] == '\t' ||
             text[start] == '\r' || text[start] == '\n'))
@@ -71,9 +79,24 @@ static bool ends_with_bat(const std::string &token)
     return ext == ".bat";
 }
 
+static std::string command_name_token(const std::string &cmd)
+{
+    std::string text = trim_command(cmd);
+    if (!text.empty() && text[0] == '"')
+    {
+        size_t end_quote = text.find('"', 1);
+        if (end_quote != std::string::npos)
+        {
+            return text.substr(1, end_quote - 1);
+        }
+    }
+
+    return first_token(text);
+}
+
 static bool is_bat_command(const std::string &cmd)
 {
-    return ends_with_bat(first_token(cmd));
+    return ends_with_bat(command_name_token(cmd));
 }
 
 static bool is_process_command(const std::string &cmd)
@@ -112,8 +135,7 @@ bool dispatch_command(const std::string &cmd)
 
     if (is_bat_command(cmd))
     {
-        handle_script_command(cmd.c_str());
-        return true;
+        return handle_script_command(cmd.c_str()) != 0;
     }
 
     handle_external_command(cmd.c_str());
